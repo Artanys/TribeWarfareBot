@@ -32,6 +32,8 @@
     <Compile Include="twbot\lib\__init__.py" />
     <Compile Include="twbot\permissions.py" />
     <Compile Include="run.py" />
+    <Compile Include="twbot\playerlist.py" />
+    <Compile Include="twbot\queryer.py" />
     <Compile Include="twbot\utils.py" />
     <Compile Include="twbot\__init__.py" />
   </ItemGroup>
