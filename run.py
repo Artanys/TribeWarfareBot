@@ -204,7 +204,7 @@ def main():
                 traceback.print_exc()
 
         finally:
-            if not m or not m.init_ok:
+            if not b or not b.init_ok:
                 break
 
             asyncio.set_event_loop(asyncio.new_event_loop())

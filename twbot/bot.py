@@ -337,10 +337,6 @@ class TribeWarfareBot(discord.Client):
         else:
             traceback.print_exc()
 
-    async def on_resumed(self):
-        for vc in self.the_clients.values():
-            vc.main_ws = self.ws
-
     async def on_ready(self):
         print('\rConnected!  TribeWarfareBot v%s\n' % BOTVERSION)
 
@@ -790,9 +786,6 @@ class TribeWarfareBot(discord.Client):
 
         # noinspection PyBroadException
         try:
-            if user_permissions.ignore_non_voice and command in user_permissions.ignore_non_voice:
-                await self._check_ignore_non_voice(message)
-
             handler_kwargs = {}
             if params.pop('message', None):
                 handler_kwargs['message'] = message

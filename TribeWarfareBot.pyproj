@@ -36,7 +36,6 @@
     <Compile Include="twbot\__init__.py" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="config\autoplaylist.txt" />
     <Content Include="config\blacklist.txt" />
     <Content Include="config\permissions.ini" />
     <Content Include="config\options.ini" />
