@@ -1,0 +1,5 @@
+import os.path
+
+VERSION = '0.1'
+
+DISCORD_MSG_CHAR_LIMIT = 2000

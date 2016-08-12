@@ -301,3 +301,6 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+config/options.ini
+config/permissions.ini
+*.pyc

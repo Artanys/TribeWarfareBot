@@ -1,0 +1,4 @@
+discord.py
+python-valve
+pip
+cffi==1.6.0; sys_platform == 'win32'
