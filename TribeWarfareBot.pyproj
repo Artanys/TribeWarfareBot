@@ -26,7 +26,6 @@
     <Compile Include="twbot\config.py" />
     <Compile Include="twbot\constants.py" />
     <Compile Include="twbot\downloader.py" />
-    <Compile Include="twbot\entry.py" />
     <Compile Include="twbot\exceptions.py" />
     <Compile Include="twbot\lib\event_emitter.py" />
     <Compile Include="twbot\lib\__init__.py" />

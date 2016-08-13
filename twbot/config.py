@@ -66,6 +66,7 @@ class Config:
 
         self.server_ip = config.get('TribeWarfareBot', 'ServerIp', fallback=ConfigDefaults.server_ip)
         self.server_port = config.getint('TribeWarfareBot', 'ServerPort', fallback=ConfigDefaults.server_port)
+        self.minimum_to_raid = config.getint('TribeWarfareBot', 'MinimumToRaid', fallback=ConfigDefaults.minimum_to_raid)
         self.delete_messages  = config.getboolean('TribeWarfareBot', 'DeleteMessages', fallback=ConfigDefaults.delete_messages)
         self.delete_invoking = config.getboolean('TribeWarfareBot', 'DeleteInvoking', fallback=ConfigDefaults.delete_invoking)
         self.debug_mode = config.getboolean('TribeWarfareBot', 'DebugMode', fallback=ConfigDefaults.debug_mode)
@@ -138,6 +139,7 @@ class ConfigDefaults:
 
     server_ip = '63.251.107.26'
     server_port = 27021
+    minimum_to_raid = 5
     delete_messages = True
     delete_invoking = False
     debug_mode = False
