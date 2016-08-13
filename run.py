@@ -157,7 +157,7 @@ def main():
         # Maybe I need to try to import stuff first, then actually import stuff
         # It'd save me a lot of pain with all that awful exception type checking
 
-        m = None
+        b = None
         try:
             from twbot import TribeWarfareBot
             b = TribeWarfareBot()
