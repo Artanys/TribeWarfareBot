@@ -22,7 +22,6 @@ from datetime import timedelta
 from random import choice, shuffle
 from collections import defaultdict
 
-from twbot.playerlist import Playerlist
 from twbot.queryer import ServerQueryer
 from twbot.config import Config, ConfigDefaults
 from twbot.permissions import Permissions, PermissionsDefaults
