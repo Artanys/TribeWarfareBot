@@ -22,12 +22,13 @@ from datetime import timedelta
 from random import choice, shuffle
 from collections import defaultdict
 
+from twbot.playerlist import Playerlist
+from twbot.queryer import ServerQueryer
 from twbot.config import Config, ConfigDefaults
 from twbot.permissions import Permissions, PermissionsDefaults
 from twbot.utils import load_file, write_file, sane_round_int
 
 from . import exceptions
-from . import downloader
 from .constants import VERSION as BOTVERSION
 from .constants import DISCORD_MSG_CHAR_LIMIT
 
@@ -41,7 +42,7 @@ class Response:
 
 class TribeWarfareBot(discord.Client):
     def __init__(self, config_file=ConfigDefaults.options_file, perms_file=PermissionsDefaults.perms_file):
-        self.players = {}
+        self.queryer = None
         self.the_clients = {}
         self.locks = defaultdict(asyncio.Lock)
         self.client_connect_lock = asyncio.Lock()
@@ -108,44 +109,6 @@ class TribeWarfareBot(discord.Client):
 
         return discord.utils.oauth_url(self.cached_client_id, permissions=permissions, server=server)
 
-    async def get_client(self):
-
-        with await self.client_connect_lock:
-            server = channel.server
-            if server.id in self.the_clients:
-                return self.the_clients[server.id]
-
-            kwargs = {
-                'user': self.user,
-                'loop': self.loop
-            }
-            client = Client(**kwargs)
-            self.the_clients[server.id] = client
-
-            retries = 3
-            for x in range(retries):
-                try:
-                    print("Attempting connection...")
-                    await asyncio.wait_for(client.connect(), timeout=10, loop=self.loop)
-                    print("Connection established.")
-                    break
-                except:
-                    traceback.print_exc()
-                    print("Failed to connect, retrying (%s/%s)..." % (x+1, retries))
-                    await asyncio.sleep(1)
-
-                    if x == retries-1:
-                        raise exceptions.HelpfulError(
-                            "Cannot establish connection to chat.  "
-                            "Something may be blocking outgoing UDP connections.",
-
-                            "This may be an issue with a firewall blocking UDP.  "
-                            "Figure out what is blocking UDP and disable it.  "
-                            "It's most likely a system firewall or overbearing anti-virus firewall.  "
-                        )
-
-            return client
-
     async def reconnect_client(self, server):
         if server.id not in self.the_clients:
             return
@@ -169,6 +132,44 @@ class TribeWarfareBot(discord.Client):
     async def disconnect_all_clients(self):
         for c in self.the_clients.copy().values():
             await self.disconnect_client(c.channel.server)
+
+    async def get_queryer(self, create=False) -> ServerQueryer:
+        if not self.queryer:
+            playerlist = Playerlist(self)
+            queryer = ServerQueryer(self) \
+                .on('query-finished', self.on_query_finished)
+
+            self.queryer = queryer
+
+        return self.queryer
+
+    async def on_query_finished(self, message, queryer):
+        redOnline = [p[0] for p in queryer.red if p[1] != 'Offline']        
+        greenOnline = [p[0] for p in queryer.green if p[1] != 'Offline']        
+        blueOnline = [p[0] for p in queryer.blue if p[1] != 'Offline']
+        lenr = len(redOnline)
+        leng = len(greenOnline)
+        lenb = len(blueOnline)
+        maxlen = max(lenr, leng, lenb)
+
+        responseText = ('%s - Current TribeWarfare Server Status:'
+                        '\n```' 
+                        '\nRED TRIBE\t\tGREEN TRIBE\t\tBLUE TRIBE' 
+                        '\n%d Online\t\t %d Online\t\t  %d Online'
+                        '\n'
+                        % (message.author.mention, lenr, leng, lenb))
+        iterr = iter(redOnline)
+        iterg = iter(greenOnline)
+        iterb = iter(blueOnline)
+        responseText += ''.join('\n%s\t\t%s\t\t%s' % (str(next(iterr, ''))[:10].ljust(10), str(next(iterg, ''))[:10].ljust(10), str(next(iterb, ''))[:10].ljust(10))
+                         for i in range(0, maxlen))
+        responseText += ('\n```'
+                         'Raid Status:'
+                         '\nRED TRIBE: %s\tGREEN TRIBE: %s\tBLUE TRIBE: %s' % (
+                             ':white_check_mark:' if lenr >= self.config.minimum_to_raid else ':no_entry_sign:',
+                             ':white_check_mark:' if leng >= self.config.minimum_to_raid else ':no_entry_sign:',
+                             ':white_check_mark:' if lenb >= self.config.minimum_to_raid else ':no_entry_sign:'))
+        await self.safe_send_message(message.channel, responseText, expire_in=30)
 
     async def update_now_playing(self, entry=None, is_paused=False):
         game = None
@@ -406,9 +407,15 @@ class TribeWarfareBot(discord.Client):
         print("  Debug Mode: " + ['Disabled', 'Enabled'][self.config.debug_mode])
         print()
 
+        # Create server queryer
+        await self.get_queryer(create=True)
+
         # maybe option to leave the ownerid blank and generate a random command for the owner to use
         # wait_for_message is pretty neato
         # t-t-th-th-that's all folks!
+
+    async def cmd_status(self, message):
+        self.queryer.query(message)
 
     async def cmd_help(self, command=None):
         """
@@ -801,9 +808,6 @@ class TribeWarfareBot(discord.Client):
             if params.pop('server', None):
                 handler_kwargs['server'] = message.server
 
-            if params.pop('player', None):
-                handler_kwargs['player'] = await self.get_player(message.channel)
-
             if params.pop('permissions', None):
                 handler_kwargs['permissions'] = user_permissions
 
@@ -812,9 +816,6 @@ class TribeWarfareBot(discord.Client):
 
             if params.pop('channel_mentions', None):
                 handler_kwargs['channel_mentions'] = list(map(message.server.get_channel, message.raw_channel_mentions))
-
-            if params.pop('voice_channel', None):
-                handler_kwargs['voice_channel'] = message.server.me.voice_channel
 
             if params.pop('leftover_args', None):
                 handler_kwargs['leftover_args'] = args
