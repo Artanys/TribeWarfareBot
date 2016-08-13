@@ -134,7 +134,6 @@ class TribeWarfareBot(discord.Client):
 
     async def get_queryer(self, create=False) -> ServerQueryer:
         if not self.queryer:
-            playerlist = Playerlist(self)
             queryer = ServerQueryer(self) \
                 .on('query-finished', self.on_query_finished)
 
